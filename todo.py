@@ -20,22 +20,38 @@ class LabelledInput(Widget):
         yield Input(placeholder=self.placeholder)
 
 
+class TodoItem(Widget):
+    DEFAULT_CSS = """
+    TodoItem {
+        height: 2;
+    }
+    """
+
+    def __init__(self, description="Get this done!", due_date="yyyy-mm-dd"):
+        super().__init__()
+        self.description = description
+        self.due_date = due_date
+
+    def compose(self):
+        yield Label(self.description)
+        yield Label(self.due_date)
+
+
 class TODOApp(App):
     BINDINGS = [
         ("b", "ring_bell", "Ring the bell"),
+        ("n", "new_todo", "Create a new todo item"),
     ]
 
     def compose(self):
         yield Header(name="TODO App")
-        yield LabelledInput("Name")
-        yield LabelledInput("Surame")
-        yield LabelledInput("Email")
-        yield Button("Click me")
         yield Footer()
 
     def action_ring_bell(self):
         self.bell()
-        self.mount(Label("Bell rang!"))
+
+    def action_new_todo(self):
+        self.mount(TodoItem())
 
 
 TODOApp().run()

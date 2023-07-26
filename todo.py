@@ -1,6 +1,8 @@
+from dataclasses import dataclass
 from textual import on
 from textual.app import App
 from textual.containers import Horizontal
+from textual.message import Message
 from textual.widget import Widget
 from textual.widgets import Button, Header, Footer, Input, Label
 
@@ -33,6 +35,10 @@ class TodoItem(Widget):
     }
     """
 
+    @dataclass
+    class DeletionRequest(Message):
+        widget_to_delete: "TodoItem"
+
     def __init__(self, description="Get this done!", due_date="yyyy-mm-dd"):
         super().__init__()
         self.description = description
@@ -42,8 +48,12 @@ class TodoItem(Widget):
         with Horizontal():
             yield Label(self.description)
             yield Label(self.due_date)
-            yield Button("Delete")
-            yield Button("Edit")
+            yield Button("Delete", id="delete")
+            yield Button("Edit", id="edit")
+
+    @on(Button.Pressed, "#delete")
+    def delete(self):
+        self.post_message(self.DeletionRequest(self))
 
 
 class TODOApp(App):
@@ -61,6 +71,10 @@ class TODOApp(App):
 
     def action_new_todo(self):
         self.mount(TodoItem())
+
+    @on(TodoItem.DeletionRequest)
+    def remove_todo(self, message):
+        message.widget_to_delete.remove()
 
 
 TODOApp().run()

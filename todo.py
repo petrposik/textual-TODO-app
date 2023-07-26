@@ -1,4 +1,6 @@
+from textual import on
 from textual.app import App
+from textual.containers import Horizontal
 from textual.widget import Widget
 from textual.widgets import Button, Header, Footer, Input, Label
 
@@ -23,7 +25,11 @@ class LabelledInput(Widget):
 class TodoItem(Widget):
     DEFAULT_CSS = """
     TodoItem {
-        height: 2;
+        height: 3;
+    }
+    TodoItem Label {
+        padding: 1;
+        padding-left: 0;
     }
     """
 
@@ -33,8 +39,11 @@ class TodoItem(Widget):
         self.due_date = due_date
 
     def compose(self):
-        yield Label(self.description)
-        yield Label(self.due_date)
+        with Horizontal():
+            yield Label(self.description)
+            yield Label(self.due_date)
+            yield Button("Delete")
+            yield Button("Edit")
 
 
 class TODOApp(App):

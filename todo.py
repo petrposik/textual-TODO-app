@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from functools import partial
-from textual import on
+from textual import on, work
 from textual.app import App
 from textual.containers import Horizontal
 from textual.message import Message
@@ -83,10 +83,10 @@ class TodoItemDetailsScreen(ModalScreen):
     }
     """
 
-    def __init__(self, init_descr="Get it done!", init_date="yyyy-mm-dd"):
+    def __init__(self, init_descr="", init_date=""):
         super().__init__()
-        self.description_input = Input(placeholder=init_descr)
-        self.date_input = Input(placeholder=init_date)
+        self.description_input = Input(placeholder="Get it done!")
+        self.date_input = Input(placeholder="yyyy-mm-dd")
         self.description_input.value = init_descr
         self.date_input.value = init_date
 
@@ -106,11 +106,33 @@ class TODOApp(App):
     BINDINGS = [
         ("b", "ring_bell", "Ring the bell"),
         ("n", "new_todo", "Create a new todo item"),
+        ("q", "quit", "Quit the application"),
     ]
 
     def compose(self):
         yield Header(name="TODO App", show_clock=True)
         yield Footer()
+
+    def on_mount(self):
+        self.load_todos()
+
+    def load_todos(self):
+        with open("todos.dsv") as f:
+            for line in f:
+                description, date = line.strip().split("|")
+                item = TodoItem()
+                item.description = description
+                item.date = date
+                self.mount(item)
+
+    def action_quit(self):
+        self.save_todos()
+        self.exit()
+
+    def save_todos(self):
+        with open("todos.dsv", "w") as f:
+            for item in self.query(TodoItem):
+                f.write(f"{item.description}|{item.date}\n")
 
     def action_ring_bell(self):
         self.bell()

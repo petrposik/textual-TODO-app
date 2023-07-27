@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from functools import partial
 from textual import on, work
 from textual.app import App
-from textual.containers import Horizontal
+from textual.containers import Horizontal, Center, Container
 from textual.message import Message
 from textual.reactive import reactive
 from textual.screen import ModalScreen
@@ -30,11 +30,7 @@ class LabelledInput(Widget):
 class TodoItem(Widget):
     DEFAULT_CSS = """
     TodoItem {
-        height: 3;
-    }
-    TodoItem Label {
-        padding: 1;
-        padding-left: 0;
+        height: 2;
     }
     """
 
@@ -51,15 +47,15 @@ class TodoItem(Widget):
 
     def __init__(self):
         super().__init__()
-        self.description_label = Label()
-        self.date_label = Label()
+        self.description_label = Label(id="description")
+        self.date_label = Label(id="date")
 
     def compose(self):
         with Horizontal():
+            yield Button("✅", classes="emoji-button", id="delete")
+            yield Button("📝", classes="emoji-button", id="edit")
             yield self.description_label
             yield self.date_label
-            yield Button("Delete", id="delete")
-            yield Button("Edit", id="edit")
 
     def watch_description(self, description):
         self.description_label.update(description)
@@ -91,11 +87,13 @@ class TodoItemDetailsScreen(ModalScreen):
         self.date_input.value = init_date
 
     def compose(self):
-        yield Label("Description:")
-        yield self.description_input
-        yield Label("Date:")
-        yield self.date_input
-        yield Button("Submit")
+        with Container():
+            yield Label("Description:")
+            yield self.description_input
+            yield Label("Date:")
+            yield self.date_input
+            with Center():
+                yield Button("Submit")
 
     def on_button_pressed(self):
         data = (self.description_input.value, self.date_input.value)
@@ -103,8 +101,8 @@ class TodoItemDetailsScreen(ModalScreen):
 
 
 class TODOApp(App):
+    CSS_PATH = "todo.css"
     BINDINGS = [
-        ("b", "ring_bell", "Ring the bell"),
         ("n", "new_todo", "Create a new todo item"),
         ("q", "quit", "Quit the application"),
     ]
@@ -133,9 +131,6 @@ class TODOApp(App):
         with open("todos.dsv", "w") as f:
             for item in self.query(TodoItem):
                 f.write(f"{item.description}|{item.date}\n")
-
-    def action_ring_bell(self):
-        self.bell()
 
     def action_new_todo(self):
         self.push_screen(TodoItemDetailsScreen(), self.new_todo_callback)
